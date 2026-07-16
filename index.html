@@ -103,17 +103,30 @@
   }
   .brewy:hover{ transform: scale(1.12) var(--r); }
   .brewy.reveal{
-    animation: pulse-glow 1s ease-in-out infinite;
-    z-index:20;
+    animation: pulse-glow 0.7s ease-in-out infinite;
+    z-index:25;
   }
   .brewy.found{
     opacity:.35; filter: grayscale(1) drop-shadow(0 2px 3px rgba(0,0,0,.1));
     cursor:default; pointer-events:none;
   }
   @keyframes pulse-glow{
-    0%,100%{ filter: drop-shadow(0 0 0px #FFD54F) drop-shadow(0 2px 3px rgba(0,0,0,.18)); }
-    50%{ filter: drop-shadow(0 0 18px #FFD54F) drop-shadow(0 2px 3px rgba(0,0,0,.18)); }
+    0%,100%{
+      filter: drop-shadow(0 0 6px #FFD54F) drop-shadow(0 0 2px #fff) drop-shadow(0 2px 3px rgba(0,0,0,.18));
+      transform: scale(1) var(--r);
+    }
+    50%{
+      filter: drop-shadow(0 0 34px #FFD54F) drop-shadow(0 0 14px #fff) drop-shadow(0 2px 3px rgba(0,0,0,.18));
+      transform: scale(1.4) var(--r);
+    }
   }
+  #dim-overlay{
+    position:absolute; inset:0; z-index:15; pointer-events:none;
+    background: rgba(20,35,10,0.6);
+    opacity:0; transition: opacity .25s ease;
+  }
+  #dim-overlay.show{ opacity:1; }
+
 
   .miss-x{
     position:absolute; pointer-events:none; font-size:20px; z-index:10;
@@ -231,6 +244,7 @@
 
 <div id="scene-wrap">
   <div id="scene"></div>
+  <div id="dim-overlay"></div>
 </div>
 
 <div class="overlay" id="startOverlay">
@@ -422,10 +436,12 @@ function buildScene(){
       span.addEventListener("keydown", (e)=>{ if(e.key==="Enter"||e.key===" ") onMiss(e); });
       scene.appendChild(span);
 
-      allTilesLocal.push({
+      const rec = {
         el: span, char: chosenChar, category: "static",
         baseX, baseY, x: baseX, y: baseY, size, baseTransform,
-      });
+      };
+      span.rec = rec;
+      allTilesLocal.push(rec);
     }
   }
 
@@ -649,11 +665,14 @@ function onMiss(e){
   const el = e.currentTarget;
   el.classList.remove("shake"); void el.offsetWidth; el.classList.add("shake");
 
+  const curX = el.rec ? el.rec.x : parseFloat(el.style.left);
+  const curY = el.rec ? el.rec.y : parseFloat(el.style.top);
+
   const x = document.createElement("div");
   x.className = "miss-x";
   x.textContent = "❌";
-  x.style.left = el.style.left;
-  x.style.top = el.style.top;
+  x.style.left = curX + "px";
+  x.style.top = curY + "px";
   document.getElementById("scene").appendChild(x);
   setTimeout(()=> x.remove(), 650);
 }
@@ -742,10 +761,14 @@ document.getElementById("againBtn").addEventListener("click", ()=>{
 });
 document.getElementById("revealBtn").addEventListener("click", ()=>{
   const all = document.querySelectorAll(".brewy:not(.found)");
+  if(!all.length) return;
+  const dim = document.getElementById("dim-overlay");
+  dim.classList.add("show");
   all.forEach(b=>{
     b.classList.add("reveal");
-    setTimeout(()=> b.classList.remove("reveal"), 1800);
+    setTimeout(()=> b.classList.remove("reveal"), 2000);
   });
+  setTimeout(()=> dim.classList.remove("show"), 2000);
 });
 
 window.addEventListener("resize", ()=>{
