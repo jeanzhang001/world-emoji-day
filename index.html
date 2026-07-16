@@ -363,11 +363,13 @@ function buildScene(){
   const w = wrap.clientWidth;
   const h = wrap.clientHeight;
   const isSmall = w < 520;
-  const cell = isSmall ? 35 : (w < 900 ? 41 : 50);
-  state.cellSize = cell;
+  const targetCell = isSmall ? 35 : (w < 900 ? 41 : 50);
 
-  const cols = Math.max(4, Math.floor(w/cell));
-  const rows = Math.max(4, Math.floor(h/cell));
+  const cols = Math.max(4, Math.round(w/targetCell));
+  const rows = Math.max(4, Math.round(h/targetCell));
+  const cellW = w/cols;
+  const cellH = h/rows;
+  state.cellSize = (cellW+cellH)/2;
 
   // pick N distinct brewy cells, avoiding the outer border ring when possible
   const brewyCells = [];
@@ -412,13 +414,13 @@ function buildScene(){
       if(usedKeys.has(c+","+r)) continue; // reserved for a brewy
       if(Math.random() > fillProb) continue; // small gaps for breathing room
 
-      const jitterX = rand(-cell*0.15, cell*0.15);
-      const jitterY = rand(-cell*0.15, cell*0.15);
+      const jitterX = rand(-cellW*0.15, cellW*0.15);
+      const jitterY = rand(-cellH*0.15, cellH*0.15);
       const rot = rand(-22, 22);
       const scale = rand(0.82, 1.28);
-      const size = cell * 0.82;
-      const baseX = c*cell + jitterX;
-      const baseY = r*cell + jitterY;
+      const size = state.cellSize * 0.82;
+      const baseX = c*cellW + jitterX;
+      const baseY = r*cellH + jitterY;
       const baseTransform = `rotate(${rot}deg) scale(${scale})`;
 
       const span = document.createElement("span");
@@ -459,16 +461,16 @@ function buildScene(){
   const SIDE_ASPECT = 536/300;
 
   brewyCells.forEach(([bc,br], idx)=>{
-    const jitterX = rand(-cell*0.15, cell*0.15);
-    const jitterY = rand(-cell*0.15, cell*0.15);
+    const jitterX = rand(-cellW*0.15, cellW*0.15);
+    const jitterY = rand(-cellH*0.15, cellH*0.15);
     const rot = rand(-14, 14);
     const scale = rand(0.9, 1.15);
-    const widthPx = cell * 0.82 * scale * 0.95 * 0.95;
+    const widthPx = state.cellSize * 0.82 * scale * 0.95 * 0.95;
     const isSide = Math.random() < 0.5;
     const src = isSide ? SIDE_SRC : BREWY_SRC;
     const heightPx = widthPx * (isSide ? SIDE_ASPECT : FRONT_ASPECT);
-    const baseX = bc*cell + jitterX;
-    const baseY = br*cell + jitterY;
+    const baseX = bc*cellW + jitterX;
+    const baseY = br*cellH + jitterY;
 
     const img = document.createElement("img");
     img.src = src;
